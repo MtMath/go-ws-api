@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WebSocket Chat</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .chatbox {
+      width: 100%;
+      height: 300px;
+      overflow: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    .message {
+      margin-bottom: 10px;
+      word-wrap: break-word;
+    }
+
+    .message .sender {
+      font-weight: bold;
+      margin-right: 5px;
+    }
+
+    .message .content {
+      display: inline-block;
+    }
+
+    .inputbox {
+      width: 70%;
+      display: inline-block;
+      margin-right: 10px;
+    }
+
+    .send-btn {
+      display: inline-block;
+      vertical-align: top;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="chatbox" id="chatbox"></div>
+    <div>
+      <input type="text" class="inputbox" id="inputbox" placeholder="Type your message..." />
+      <button class="send-btn" id="sendBtn">Send</button>
+    </div>
+  </div>
+
+  <script>
+    var socket = new WebSocket("ws://localhost:8080/ws");
+    var sender = "User-" + Math.floor(Math.random() * 122);
+
+    socket.onmessage = function(event) {
+      let message = event.data;
+      var chatbox = document.getElementById("chatbox");
+      var messageElement = document.createElement("div");
+      messageElement.className = "message";
+      const splitText = message.split(":");
+      messageElement.innerHTML = "<span class='sender'>"+ splitText[0] + "</span><span class='content'>" + splitText[1] + "</span>";
+      chatbox.appendChild(messageElement);
+      chatbox.scrollTop = chatbox.scrollHeight;
+    };
+
+    var sendBtn = document.getElementById("sendBtn");
+    sendBtn.addEventListener("click", function() {
+      sendMessage();
+    });
+
+    var inputbox = document.getElementById("inputbox");
+    inputbox.addEventListener("keypress", function(event) {
+      if (event.keyCode === 13) {
+        sendMessage();
+      }
+    });
+
+    function sendMessage() {
+      var message = inputbox.value;
+      if (message.trim() !== "") {
+        socket.send(sender + ": " + message);
+        var chatbox = document.getElementById("chatbox");
+        var messageElement = document.createElement("div");
+        messageElement.className = "message";
+        messageElement.innerHTML = "<span class='sender'>You:</span><span class='content'>" + message + "</span>";
+        chatbox.appendChild(messageElement);
+        chatbox.scrollTop = chatbox.scrollHeight;
+        inputbox.value = "";
+      }
+    }
+  </script>
+</body>
+</html>
